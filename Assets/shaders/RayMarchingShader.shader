@@ -10,19 +10,24 @@ Shader "Hidden/RayMarchingShader"
         Pass
         {
             CGPROGRAM
+
             #pragma vertex vert
             #pragma fragment frag
+
             #include "UnityCG.cginc"
+
             struct appdata
             {
                 float4 vertex : POSITION;
                 float2 uv : TEXCOORD0;
             };
+
             struct v2f
             {
                 float2 uv : TEXCOORD0;
                 float4 vertex : SV_POSITION;
             };
+
             v2f vert (appdata v)
             {
                 v2f o;
@@ -30,6 +35,7 @@ Shader "Hidden/RayMarchingShader"
                 o.uv = v.uv;
                 return o;
             }
+
             sampler2D _MainTex;
 
             //variables
@@ -53,9 +59,6 @@ Shader "Hidden/RayMarchingShader"
             static const float PI = 3.14159265f;
             float4x4 _CTW;
             float4x4 _PMI;
-
-
-            // distance estimators and their normals
 
             float SphereDistance(float3 eye, float3 centre, float radius) 
             {
@@ -86,10 +89,7 @@ Shader "Hidden/RayMarchingShader"
                 for (int i = 0; i < MandelbulbIterations; i++) 
                 {
                     r = length(z);
-                    if (r > 2) 
-                    {
-                        break;
-                    }
+                    if (r > 2) break;
 
                     // convert to polar coordinates
                     float theta = acos(z.z / r);
@@ -114,15 +114,12 @@ Shader "Hidden/RayMarchingShader"
                 float3 yDir = float3(0, epsilon, 0);
                 float3 zDir = float3(0, 0, epsilon);
 
-                return normalize(float3(
-                    MandelbulbDistance(p + xDir) - MandelbulbDistance(p - xDir),
-                    MandelbulbDistance(p + yDir) - MandelbulbDistance(p - yDir),
-                    MandelbulbDistance(p + zDir) - MandelbulbDistance(p - zDir)
-                    ));
+                float x = MandelbulbDistance(p + xDir) - MandelbulbDistance(p - xDir);
+                float y = MandelbulbDistance(p + yDir) - MandelbulbDistance(p - yDir);
+                float z = MandelbulbDistance(p + zDir) - MandelbulbDistance(p - zDir);
+
+                return normalize(float3(x, y, z));
             }
-
-
-            // ray creation
 
             struct Ray
             {
@@ -145,9 +142,6 @@ Shader "Hidden/RayMarchingShader"
                 float3 direction = normalize(mul(_CTW, float4(fragPos, 0)).xyz);
                 return CreateRay(origin, direction);
             }
-
-
-            // shader options
 
             float calcsoftshadow(float3 ro, float3 rd)
             {
@@ -205,9 +199,6 @@ Shader "Hidden/RayMarchingShader"
                 float phi = atan2(rd.x, -rd.z) / -PI * 0.5f;
                 return _SkyboxTexture.SampleLevel(sampler_SkyboxTexture, float2(phi, theta), 0);
             }
-
-
-            // pixel shader
 
             fixed4 frag (v2f i) : SV_Target
             {
@@ -273,6 +264,7 @@ Shader "Hidden/RayMarchingShader"
                 float phi = atan2(ray.direction.x, -ray.direction.z) / -PI * 0.5f;
                 return _SkyboxTexture.SampleLevel(sampler_SkyboxTexture, float2(phi, theta), 0);
             }
+            
             ENDCG
         }
     }
